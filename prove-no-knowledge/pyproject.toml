@@ -1,0 +1,15 @@
+[project]
+name = "prove-no-knowledge"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pwn>=1.0",
+    "sympy>=1.13.3",
+]
+
+[tool.pyright]
+exclude = [".venv"]
+venvPath = "."
+venv = ".venv"

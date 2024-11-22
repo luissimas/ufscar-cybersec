@@ -18,7 +18,7 @@ def main():
 
     # 256 rounds of authentication
     for round in range(1, 257):
-        # In the even case we now that the server will ask for r
+        # In the odd case we know that the server will ask for r
         if round % 2:
             # Generate a random r
             r = randrange(p)
@@ -28,12 +28,12 @@ def main():
             conn.sendline(str(c).encode())
             conn.recvline()
             conn.sendline(str(r).encode())
-        # In the odd case we now that the server will ask for (x + r) mod (p − 1)
+        # In the even case we know that the server will ask for (x + r) mod (p − 1)
         else:
             # Generate a random r
             r = randrange(p)
-            # Pick a C such that C = ((g^r mod p) * (y^-1 mod p)) mod p
-            c = (pow(g, r, p) * pow(y, -1, p)) % p
+            # Pick a C such that C = (g^r mod p) * (y^-1 mod p)
+            c = pow(g, r, p) * pow(y, -1, p)
             conn.recvline()
             conn.sendline(str(c).encode())
             conn.recvline()

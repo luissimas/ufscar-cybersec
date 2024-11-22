@@ -16,8 +16,8 @@ def main():
     conn.recvuntil(b"y: ")
     y = int(conn.recvline())
 
-    # Generate a random r
-    r = randrange(p)
+    # We can use an arbitrary r 
+    r = 1
     # Pick a C such that C = g^r mod p
     c = pow(g, r, p)
     # Pick a C such that C = (g^r mod p) * (y^-1 mod p)

@@ -1,38 +1,47 @@
 from pwn import remote
-from sympy import mod_inverse
 from random import randrange
 
 host = "cibersec-pnk.duckdns.org"
 port = 4354
 
 def main():
-    r = remote(host, port)
-    r.recvuntil(b"g: ")
-    g = int(r.recvline())
-    r.recvuntil(b"p: ")
-    p = int(r.recvline())
-    r.recvuntil(b"y: ")
-    y = int(r.recvline())
+    # Open the server connection
+    conn = remote(host, port)
 
-    rn = 1
+    # Read the values for the given constants
+    conn.recvuntil(b"g: ")
+    g = int(conn.recvline())
+    conn.recvuntil(b"p: ")
+    p = int(conn.recvline())
+    conn.recvuntil(b"y: ")
+    y = int(conn.recvline())
 
-    while rn < 257:
-        if rn % 2:
-            r.recvuntil(b"Send g^r mod p.")
-            ran = randrange(p)
-            r.sendline(str(pow(g, ran, p)).encode())
-            r.recvuntil(b"Send r.")
-            r.sendline(str(ran).encode())
+    # 256 rounds of authentication
+    for round in range(1, 257):
+        # In the even case we now that the server will ask for r
+        if round % 2:
+            # Generate a random r
+            r = randrange(p)
+            # Pick a C such that C = g^r mod p
+            c = pow(g, r, p)
+            conn.recvline()
+            conn.sendline(str(c).encode())
+            conn.recvline()
+            conn.sendline(str(r).encode())
+        # In the odd case we now that the server will ask for (x + r) mod (p − 1)
         else:
-            r.recvuntil(b"Send g^r mod p.")
-            ran = randrange(p)
-            C = (pow(g, ran, p) * mod_inverse(y, p)) % p
-            r.sendline(str(C).encode())
-            r.recvuntil(b"Send (x + r) mod (p - 1).")
-            r.sendline(str(ran).encode())
-        print(f"round {rn} passed")
-        rn += 1
-    r.interactive()
+            # Generate a random r
+            r = randrange(p)
+            # Pick a C such that C = ((g^r mod p) * (y^-1 mod p)) mod p
+            c = (pow(g, r, p) * pow(y, -1, p)) % p
+            conn.recvline()
+            conn.sendline(str(c).encode())
+            conn.recvline()
+            conn.sendline(str(r).encode())
+        print(f"Round {round} completed.")
+
+    # Receive the flag
+    print(conn.recvall().decode())
 
 if __name__ == "__main__":
     main()
